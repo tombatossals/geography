@@ -1,0 +1,92 @@
+body {
+  padding: 1em;
+  background: #b5daff;
+}
+
+div.navbar {
+}
+
+.sidebar-nav {
+  padding: 9px 0;
+}
+
+.container-fluid {
+  padding: 0;
+}
+
+.navbar .nav .open > .dropdown-toggle, .navbar .nav .active > .dropdown-toggle, .navbar .nav .open.active > .dropdown-toggle {
+	background-color: hsl(208, 100%, 40%);
+}
+
+.nav > .btn-group {
+	float: right;
+}
+
+footer {
+	margin: .2em 1em;
+}
+
+footer a {
+	border-top: 1px solid #888;
+	padding: 1em;
+}
+
+ul.nav li {
+    color: #FFF;
+    font-weight: bold;
+    font-size: 1.4em;
+}
+
+#searchForm {
+    margin-top: 12px;
+}
+
+a#title {
+    font-size: 2.8em;
+    font-weight: bold;
+}
+
+#movies {
+    margin-left: 2em;
+}
+
+#movies img {
+    max-height: 210px;
+}
+
+#alphabetic li > a {
+    padding-top: 7px;
+    padding-bottom: 7px;
+}
+
+.showmovie {
+    width: 780px;
+    margin-left: -390px;
+    height: 570px;
+    min-height: 570px;
+    margin-top: -285px;
+}
+
+.showmovie .modal-body img {
+    height: 415px;
+}
+
+.thumbnails {
+    text-align: left;
+}
+
+div.navbar {
+    margin-bottom: 0;
+}
+
+svg {
+  background: #b5daff;
+  width: 960px;
+  height: 500px;
+}
+
+#states path {
+  fill: white;
+  stroke: blue;
+  stroke-width: 1.5px;
+}
