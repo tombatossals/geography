@@ -5,21 +5,7 @@
 //     For all details and documentation:
 //     http://backbonejs.org
 
-(function(root, factory) {
-  // Set up Backbone appropriately for the environment.
-  if (typeof exports !== 'undefined') {
-    // Node/CommonJS, no need for jQuery in that case.
-    factory(root, exports, require('underscore'));
-  } else if (typeof define === 'function' && define.amd) {
-    // AMD
-    define(['underscore', 'jquery', 'exports'], function(_, $, exports) {
-      factory(root, exports, _, $);
-    });
-  } else {
-    // Browser globals
-    root.Backbone = factory(root, {}, root._, (root.jQuery || root.Zepto || root.ender));
-  }
-}(this, function(root, Backbone, _, $) {
+(function(){
 
   // Initial Setup
   // -------------
@@ -68,7 +54,7 @@
   // to its previous owner. Returns a reference to this Backbone object.
   Backbone.noConflict = function() {
     root.Backbone = previousBackbone;
-    return Backbone;
+    return this;
   };
 
   // Turn on `emulateHTTP` to support legacy HTTP servers. Setting this option
@@ -130,7 +116,7 @@
       var event, calls, node, tail, cb, ctx;
 
       // No events, or removing *all* events.
-      if (!(calls = this._callbacks)) return this;
+      if (!(calls = this._callbacks)) return;
       if (!(events || callback || context)) {
         delete this._callbacks;
         return this;
@@ -543,7 +529,7 @@
     // Check if the model is currently in a valid state. It's only possible to
     // get into an *invalid* state if you're using silent changes.
     isValid: function() {
-      return !this.validate || !this.validate(this.attributes);
+      return !this.validate(this.attributes);
     },
 
     // Run validation against the next complete set of model attributes,
@@ -637,7 +623,7 @@
       this.length += length;
       index = options.at != null ? options.at : this.models.length;
       splice.apply(this.models, [index, 0].concat(models));
-      if (this.comparator && options.at == null) this.sort({silent: true});
+      if (this.comparator) this.sort({silent: true});
       if (options.silent) return this;
       for (i = 0, length = this.models.length; i < length; i++) {
         if (!cids[(model = this.models[i]).cid]) continue;
@@ -992,7 +978,7 @@
     // the hash, or the override.
     getFragment: function(fragment, forcePushState) {
       if (fragment == null) {
-        if (this._hasPushState || !this._wantsHashChange || forcePushState) {
+        if (this._hasPushState || forcePushState) {
           fragment = window.location.pathname;
           var search = window.location.search;
           if (search) fragment += search;
@@ -1020,7 +1006,7 @@
       var docMode           = document.documentMode;
       var oldIE             = (isExplorer.exec(navigator.userAgent.toLowerCase()) && (!docMode || docMode <= 7));
 
-      if (oldIE && this._wantsHashChange) {
+      if (oldIE) {
         this.iframe = $('<iframe src="javascript:0" tabindex="-1" />').hide().appendTo('body')[0].contentWindow;
         this.navigate(fragment);
       }
@@ -1039,7 +1025,7 @@
       // opened by a non-pushState browser.
       this.fragment = fragment;
       var loc = window.location;
-      var atRoot  = (loc.pathname == this.options.root) && !loc.search;
+      var atRoot  = loc.pathname == this.options.root;
 
       // If we've started off with a route from a `pushState`-enabled browser,
       // but we're currently in a browser that doesn't support it...
@@ -1111,12 +1097,12 @@
       if (!options || options === true) options = {trigger: options};
       var frag = (fragment || '').replace(routeStripper, '');
       if (this.fragment == frag) return;
-      var fullFrag = (frag.indexOf(this.options.root) != 0 ? this.options.root : '') + frag;
 
       // If pushState is available, we use it to set the fragment as a real URL.
       if (this._hasPushState) {
-        this.fragment = fullFrag;
-        window.history[options.replace ? 'replaceState' : 'pushState']({}, document.title, fullFrag);
+        if (frag.indexOf(this.options.root) != 0) frag = this.options.root + frag;
+        this.fragment = frag;
+        window.history[options.replace ? 'replaceState' : 'pushState']({}, document.title, frag);
 
       // If hash changes haven't been explicitly disabled, update the hash
       // fragment to store history.
@@ -1133,7 +1119,7 @@
       // If you've told us that you explicitly don't want fallback hashchange-
       // based history, then `navigate` becomes a page refresh.
       } else {
-        return window.location.assign(fullFrag);
+        window.location.assign(this.options.root + fragment);
       }
       if (options.trigger) this.loadUrl(fragment);
     },
@@ -1206,7 +1192,7 @@
     make: function(tagName, attributes, content) {
       var el = document.createElement(tagName);
       if (attributes) $(el).attr(attributes);
-      if (content != null) $(el).html(content);
+      if (content) $(el).html(content);
       return el;
     },
 
@@ -1279,10 +1265,10 @@
     // an element from the `id`, `className` and `tagName` properties.
     _ensureElement: function() {
       if (!this.el) {
-        var attrs = _.extend({}, getValue(this, 'attributes'));
+        var attrs = getValue(this, 'attributes') || {};
         if (this.id) attrs.id = this.id;
         if (this.className) attrs['class'] = this.className;
-        this.setElement(this.make(getValue(this, 'tagName'), attrs), false);
+        this.setElement(this.make(this.tagName, attrs), false);
       } else {
         this.setElement(this.el, false);
       }
@@ -1343,7 +1329,7 @@
     // Ensure that we have the appropriate request data.
     if (!options.data && model && (method == 'create' || method == 'update')) {
       params.contentType = 'application/json';
-      params.data = JSON.stringify(model);
+      params.data = JSON.stringify(model.toJSON());
     }
 
     // For older servers, emulate JSON by encoding the request into an HTML-form.
@@ -1370,11 +1356,8 @@
     }
 
     // Make the request, allowing the user to override any Ajax options.
-    return Backbone.ajax(_.extend(params, options));
+    return $.ajax(_.extend(params, options));
   };
-
-  // Set the default ajax method.
-  Backbone.ajax = $.ajax;
 
   // Wrap an optional error callback with a fallback error event.
   Backbone.wrapError = function(onError, originalModel, options) {
@@ -1445,5 +1428,4 @@
     throw new Error('A "url" property or function must be specified');
   };
 
-  return Backbone;
-}));
+}).call(this);
