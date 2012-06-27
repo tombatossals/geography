@@ -14,7 +14,7 @@ define([
 
     initialize: function(options) {
         //_.bindAll( this, "show", "filter");
-        var mapView = new MapView( { el: "#map", width: 800, height: 400 } );
+        var mapView = new MapView( { el: "#map", width: 960, height: 500 } );
     },
 
     show: function(movieId) {

@@ -91,3 +91,13 @@ svg {
   stroke: blue;
   stroke-width: 1.5px;
 }
+
+div#map {
+    width: 1000px;
+    margin: auto;
+}
+
+.background {
+    fill: none;
+    pointer-events: all;
+}
