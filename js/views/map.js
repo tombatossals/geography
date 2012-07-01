@@ -16,55 +16,59 @@ define([
             //this.render();
 
             var width = options.width, height = options.height;
-            var projection = d3.geo.albersUsa().scale(width).translate([0, 0]);
-            this.projection = projection;
+
+            var projection = d3.geo.albersUsa()
+                            .scale(width)
+                            .translate([width / 2, height / 2]);
 
             var path = d3.geo.path().projection(projection);
-            this.path = path;
 
-            var svg = d3.select("#map").append("svg").attr("width", width).attr("height", height);
-            svg.append("rect").attr("class", "background").attr("width", width).attr("height", height).on("click", click);
+            var zoom = d3.behavior.zoom()
+                         .translate(projection.translate())
+                         .scale(projection.scale())
+                         .scaleExtent([height, 8 * height])
+                         .on("zoom", zoom);
 
-            states = svg.append("g").attr("transform", "translate(" + width / 2 + "," + height / 2 + ")").append("g").attr("id", "states");
+            var svg = d3.select("#map").append("svg")
+                        .attr("width", width)
+                        .attr("height", height);
+
+            var states = svg.append("g")
+                            .attr("id", "states")
+                            .call(zoom);
+
+            states.append("rect")
+                  .attr("class", "background")
+                  .attr("width", width)
+                  .attr("height", height);
 
             d3.json("json/us-states.json", function(json) {
-                states.selectAll("path").data(json.features).enter().append("path").attr("d", path).on("mouseover", function(datum, index) {
-                    d3.select(this).style("fill", "blue");
-                }).on("mouseout", function(datum, index) {
-                    d3.select(this).style("fill", "white");
-                }).on("dblclick", click).call(drag);
+                states.selectAll("path")
+                      .data(json.features)
+                      .enter().append("path")
+                      .attr("d", path)
+                      .on("click", click);
             });
 
-            var drag = d3.behavior.drag().origin(Object).on("drag", dragmove);
-
-            states.selectAll("path").transition().duration(1000).attr("d", path);
-            this.states = states;
-
-            var zoomed = false;
-
-            function dragmove(d) {
-                var x = 0, y = 0;
-
-                console.log("drag");
-                var centroid = path.centroid(d);
-                x = -centroid[0];
-                y = -centroid[1];
-
-                states.transition().attr("transform", "translate(" + x + "," + y + ")"))
-            }
-
             function click(d) {
-                var k = 1;
+                var centroid = path.centroid(d),
+                               translate = projection.translate();
 
-                if (!zoomed) {
-                    k = 4;
-                    zoomed = true;
-                } else {
-                    zoomed = false;
-                }
+                projection.translate([
+                        translate[0] - centroid[0] + width / 2,
+                        translate[1] - centroid[1] + height / 2
+                ]);
 
-                states.transition().duration(1000).attr("transform", "scale(" + k + ")").style("stroke-width", 1.5 / k + "px");
+                zoom.translate(projection.translate());
+
+                states.selectAll("path").transition().duration(1000).attr("d", path);
             }
+
+            function zoom() {
+                projection.translate(d3.event.translate).scale(d3.event.scale);
+                states.selectAll("path").attr("d", path);
+            }
+
         },
 
         render: function() {
